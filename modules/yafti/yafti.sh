@@ -7,19 +7,38 @@ MODULE_DIRECTORY="${MODULE_DIRECTORY:-"/tmp/modules"}"
 
 FIRSTBOOT_DATA="/usr/share/ublue-os/firstboot"
 
+mkdir -p "$FIRSTBOOT_DATA/launcher/"
+
 # doesn't overwrite user's yafti.yml (ignores error)
 cp -n "$MODULE_DIRECTORY/yafti/yafti.yml" "$FIRSTBOOT_DATA/yafti.yml" || true
-cp -r "$MODULE_DIRECTORY/yafti/launcher/" "$FIRSTBOOT_DATA/launcher/"
+cp -r "$MODULE_DIRECTORY/yafti/launcher/" "$FIRSTBOOT_DATA"
 
 FIRSTBOOT_SCRIPT="${FIRSTBOOT_DATA}/launcher/login-profile.sh"
-PROFILED_DIR="/usr/etc/profile.d"
+PROFILED_DIR="/etc/profile.d"
 FIRSTBOOT_LINK="${PROFILED_DIR}/ublue-firstboot.sh"
 
-echo "Installing python3-pip and libadwaita"
-rpm-ostree install python3-pip libadwaita
+# Fetch ublue COPR
+REPO="https://copr.fedorainfracloud.org/coprs/ublue-os/staging/repo/fedora-${OS_VERSION}/ublue-os-staging-fedora-${OS_VERSION}.repo"
+REPO_URL="${REPO//[$'\t\r\n ']}"
+STAGING_REPO_PATH="/etc/yum.repos.d/ublue-os-staging-fedora-${OS_VERSION}.repo"
+BACKUP_STAGING_REPO_PATH="${STAGING_REPO_PATH}.backup"
 
-echo "Installing and enabling yafti"
-pip install --prefix=/usr yafti
+if [ -f "$STAGING_REPO_PATH" ]; then
+    mv "$STAGING_REPO_PATH" "$BACKUP_STAGING_REPO_PATH"
+fi
+
+echo "Downloading repo file ${REPO_URL}"
+curl -fLs --create-dirs "${REPO_URL}" -o "${STAGING_REPO_PATH}"
+echo "Downloaded repo file ${REPO_URL}"
+
+rpm-ostree install libadwaita yafti
+
+# Remove ublue COPR
+rm /etc/yum.repos.d/ublue-os-staging-fedora-*.repo
+
+if [ -f "$BACKUP_STAGING_REPO_PATH" ]; then
+    mv "$BACKUP_STAGING_REPO_PATH" "$STAGING_REPO_PATH"
+fi
 
 # If the profile.d directory doesn't exist, create it
 if [ ! -d "${PROFILED_DIR}" ]; then

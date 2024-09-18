@@ -27,17 +27,14 @@ if [[ -f "$RPM_OSTREE_CONFIG" ]]; then
 fi
 systemctl disable rpm-ostreed-automatic.timer
 
-# Install python3-pip if it's not already installed
-if ! rpm -q python3-pip > /dev/null; then
-    rpm-ostree install python3-pip
-fi
-
 # Fetch ublue COPR
-REPO="https://copr.fedorainfracloud.org/coprs/ublue-os/staging/repo/fedora-${OS_VERSION}/ublue-os-staging-fedora-${OS_VERSION}.repo"
-wget "${REPO//[$'\t\r\n ']}" -P "/etc/yum.repos.d/"
+REPO_URL="https://copr.fedorainfracloud.org/coprs/ublue-os/staging/repo/fedora-${OS_VERSION}/ublue-os-staging-fedora-${OS_VERSION}.repo"
+echo "Downloading repo file ${REPO_URL}"
+curl -fLs --create-dirs "${REPO_URL}" -o "/etc/yum.repos.d/ublue-os-staging-fedora-${OS_VERSION}.repo"
+echo "Downloaded repo file ${REPO_URL}"
 
 # topgrade is REQUIRED by ublue-update to install
-pip install --prefix=/usr topgrade
+rpm-ostree install topgrade
 rpm-ostree install ublue-update
 
 # Remove ublue COPR

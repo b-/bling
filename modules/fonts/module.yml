@@ -1,11 +1,10 @@
 name: fonts
 shortdesc: The `fonts` module can be used to install fonts from Nerd Fonts or Google Fonts.
-readme: https://raw.githubusercontent.com/blue-build/modules/main/modules/fonts/README.md
 example: |
   type: fonts
   fonts:
     nerd-fonts:
-      - FiraCode # don't add "Nerd Font" suffix.
+      - FiraCode # don't add spaces or "Nerd Font" suffix.
       - Hack
       - SourceCodePro
       - Terminus
